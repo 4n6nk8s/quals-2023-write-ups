@@ -88,7 +88,7 @@ extracted.save(EXTRACTED_DATA)
 ```
 To make sure that everything is ok now! We can use the given tool and hide a black-white image and try to extract it with our new script.
 
-We assume that everything is fine. Let's take a look now who can we extract data from the video!
+We assume that everything is fine. Let's take a look now how can we extract data from the video!
 
 ![](./video-gif.gif)
 
