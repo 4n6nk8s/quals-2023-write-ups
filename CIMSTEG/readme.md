@@ -142,17 +142,17 @@ Bingo! We are on the right way! The author told us to check the last images! Yea
 We found a big number of image that have a black line in random position of the image!
 
 <p float="left">
-  <img src="015.png" width="360" style="margin-right:50px;" />
+  <img src="015.png" width="450" style="margin-right:50px;" />
 
-  <img src="210.png" width="360" /> 
+  <img src="210.png" width="450" /> 
 </p>
 
 Ok Let's focus on the last images as the author said. This is will be better for us. Wait what?! We found a 2 pastebin links and 2 images putted as hint for us. And of couse a rabbit hole(Fake Flag)
 
 <p float="center">
-  <img src="372.png" width="300"style="margin-right:10px;" />
-  <img src="377.png" width="300"style="margin-right:10px;" /> 
-  <img src="381.png" width="300"style="margin-right:10px;" /> 
+  <img src="372.png" width="320"style="margin-right:10px;" />
+  <img src="377.png" width="320"style="margin-right:10px;" /> 
+  <img src="381.png" width="320"style="margin-right:10px;" /> 
 </p>
 
 Let's check the content of the 2 pastebin links and see what we have! 
