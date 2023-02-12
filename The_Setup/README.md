@@ -47,7 +47,7 @@ The disk image is a raw disk image, and can be investigated using FTK Imager. Th
 
 Looking at the root of the disk image, we can see a few interesting files:
 
-![](src/2023-02-12-15-52-25.png)
+![](2023-02-12-15-52-25.png)
 
 - `Documents and Settings` - Contains the user profiles of the system
 - `Program Files` - Contains the installed programs
@@ -65,7 +65,7 @@ Let's start by taking a round of the system. I will start by investigating the u
 
 The user profile is well cleaned, and there is nothing interesting in it. However, the installed programs are very interesting. There are a few programs installed.
 
-![](src/2023-02-12-15-59-03.png)
+![](2023-02-12-15-59-03.png)
 
 Maybe some of the essential ones like WinRar, Chrome, CCleaner, etc. However, there are a program that could lead to something, the LAN messenger. This program is very interesting, as it is a LAN messenger, which means it is used to communicate with other computers in the same network.
 
@@ -73,7 +73,7 @@ Let's find where its data is located!
 
 And that's how we found our starting point:
 
-![](src/2023-02-12-16-03-40.png)
+![](2023-02-12-16-03-40.png)
 
 ```
  > > > Hey 32, I am telling you am happy using this safe way to communicate,
@@ -104,13 +104,13 @@ Well, look what we've found, Metamask is being used in Chrome. Metamask is a bro
 
 Metamask Extension for Chrome
 
-![](src/2023-02-12-15-50-07.png)
+![](2023-02-12-15-50-07.png)
 
 Could there be an active wallet within Metamask? Let's check it out.
 
 Usually the extension data is stored within the 'Local Extension Settings' folder. And as expected, that folder contains some interesting files.
 
-![](src/2023-02-12-16-12-28.png)
+![](2023-02-12-16-12-28.png)
 
 The `Local Extension Settings` folder contains a folder named `nkbihfbeogaeaoehlefnkodbefgpgknn`, which is the ID of the Metamask extension. This folder contains a file named 000003.log, which is a log file. Let's check it out.
 
@@ -132,15 +132,15 @@ and this is the command to use, as indicated:
 vol -f hiberfil.sys --profile WinXPSP3x86 imagecopy -O hiberfil.raw
 ```
 
-![](src/2023-02-12-16-33-13.png)
+![](2023-02-12-16-33-13.png)
 
 Excellent, lot of dots there, but I hope now we can use Volatility to analyze the hiberfil.raw file. Let's start by checking the processes and commands history.
 
-![](src/2023-02-12-16-34-39.png)
+![](2023-02-12-16-34-39.png)
 
 `cmd.exe` is there, we are on the right track, let's keep going
 
-![](src/2023-02-12-16-35-24.png)
+![](2023-02-12-16-35-24.png)
 
 ```
 Cmd #0 @ 0x10947f0: msg Adam Hey, yes we are the only ones in the lan right now
@@ -161,13 +161,13 @@ Our guy is lazy and lacking sleep could he probably forgot about deleting the fi
 
 Remember that Ethereum stack exchange question I mentioned earlier? here is the link again [https://ethereum.stackexchange.com/questions/52658/where-does-metamask-store-the-wallet-seed-file-path](https://ethereum.stackexchange.com/questions/52658/where-does-metamask-store-the-wallet-seed-file-path).
 
-![](src/2023-02-12-14-35-18.png)
+![](2023-02-12-14-35-18.png)
 
-![](src/2023-02-12-14-35-50.png)
+![](2023-02-12-14-35-50.png)
 
-![](src/2023-02-12-14-37-16.png)
+![](2023-02-12-14-37-16.png)
 
-![](src/2023-02-12-14-37-43.png)
+![](2023-02-12-14-37-43.png)
 
 Done, we have some critical information here. The seed phrase! this should be one part of the flag! `maximum_casino_move_similar_gain_galaxy_cement_ceiling_siren_bamboo_record_actress`
 
@@ -177,7 +177,7 @@ So, we are dealing with a Metamask seed phrases and if you don't know what those
 
 Let's check the hiberfile first using the clipboard plugin
 
-![](src/2023-02-12-16-44-53.png)
+![](2023-02-12-16-44-53.png)
 
 And nothing came up, as I said earlier, the clipboard data is stored in the pagefile, the hiberfile is just a copy of RAM when hibernating the system and we know the clipboard wont be there anyways.
 
@@ -185,7 +185,7 @@ Let's check the pagefile now.
 
 You must know that the pagefile, unlike hiberfile is not a mapped address space, it has its own architecture and it varies from one system to another. It might be a hustle to find this piece of data, maybe grepping clipboard or putting together a regex to find 12 words seperated by a space. However, do you think Windows will actually store that data 12 words in a row? I don't think so, it will be a mess. Maybe we try the clipboard thing and try to adjust what we find.
 
-![](src/2023-02-12-17-49-47.png)
+![](2023-02-12-17-49-47.png)
 
 This may sound weird, since the function itself is lacking a letter `UIWin32::GetLocalClipboa`
 
@@ -201,11 +201,11 @@ Let's do it.
 
 - Spinning a new Windows XP machine with a 4GB hard disk
 
-![](src/2023-02-12-17-58-23.png)
+![](2023-02-12-17-58-23.png)
 
 - Creating a dummy restore point or just get the disk UUID, anyways we need Windows to create a restore point folder for us, so let's do it.
 
-![](src/2023-02-12-18-10-47.png)
+![](2023-02-12-18-10-47.png)
 
 - Copying the RP folders from the Disk image `System Volume Information` to the new VM's `System Volume Information`
 
@@ -213,7 +213,7 @@ Export the restore folder from System Volume Information to your desktop or some
 
 Adjust these folder options on Windows XP VM
 
-![](src/2023-02-12-18-13-45.png)
+![](2023-02-12-18-13-45.png)
 
 Then use this command to gain access to the System Volume Information folder
 
@@ -223,13 +223,13 @@ cacls "C:\System Volume Information" /E /G Administrator:F
 
 It can be administrator, Everyone or your specific VM username.
 
-![](src/2023-02-12-18-15-52.png)
+![](2023-02-12-18-15-52.png)
 
 Then copy the restore folder contents to the System Volume Information folder
 
 This is the current dummy restore point we made
 
-![](src/2023-02-12-18-16-31.png)
+![](2023-02-12-18-16-31.png)
 
 We add the exported RP5 and RP6 folders from the disk image with them
 
@@ -241,17 +241,17 @@ You can also modify the `domain.txt` since it contains the old user-id but I bel
 
 - Restoring the system like if it was a real restore point we made.
 
-![](src/2023-02-12-18-20-09.png)
+![](2023-02-12-18-20-09.png)
 
 I can see a new entry added called "restore_point", so let's proceed with it!
 
 This is the domain thing, hit 'OK'
 
-![](src/2023-02-12-18-20-52.png)
+![](2023-02-12-18-20-52.png)
 
 We wait for a quick restart.
 
-![](src/2023-02-12-18-22-16.png)
+![](2023-02-12-18-22-16.png)
 
 And that's my friends, is a success!
 
@@ -259,7 +259,7 @@ PS. I've tried some tools to explore restore point but luckily they don't work w
 
 The word "key" was mentioned in the chat, key is a very general term, if it is just the password of the Metamask wallet, then why didnt they user use password instead, rather he said "pr0v1d3nc3 will always be the key". Could this mean that we should check a key in the Registry Editor maybe named pr0v1d3nc3? I don't know, but I will check it anyways.
 
-![](src/2023-02-12-18-22-55.png)
+![](2023-02-12-18-22-55.png)
 
 And there we go, a key named pr0v1d3nc3 containing a string named first that in turn contains a seed phrase. I think this should be the start of the flag as it was named first.
 
