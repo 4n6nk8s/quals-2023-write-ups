@@ -20,68 +20,68 @@ Let's start figure out what softwares are installed and check the history of the
 
 
 Oh as expected there is a mail software. It's thunderbird. We will check it later.
-![](2023-03-02-23-13-31.png)
+![](./images/2023-03-02-23-13-31.png)
 
 
 Let's Check the browsing history of the system and check what is going on here! We found Edge only here! 
 
 Go to `C:\Users\Kong Office\AppData\Local\Edge\UserData\Default` and check the `History` database
 
-![](2023-03-02-23-06-33.png)
+![](./images/2023-03-02-23-06-33.png)
 
 After checking every single link and search. we found searchs about whatsapp desktop how to install it and official whatsapp download website is visited.
 
-![](2023-03-02-23-30-04.png)
+![](./images/2023-03-02-23-30-04.png)
 
 Thunderbird is installed for sure. But still no clue for whatsapp for now. Let's see what we have on the inbox now! It's time to check the mails! To check the inbox you can go to `C:\Users\Kong Office\AppData\Roaming\Thunderbird\Profiles\0ppw4tlt.default-release\ImapMail\imap.gmail.com` and investigate the `INBOX` file 
 
-![](2023-03-02-23-55-58.png)
+![](./images/2023-03-02-23-55-58.png)
 
 You can open the file using any text editor to check the mails but it's the worst way. you'll find the attachements encoded to base 64 and many trashy details 
 
 You'll get an ugly view like this if you open it with vscode.
-![](2023-03-03-00-05-46.png)
+![](./images/2023-03-03-00-05-46.png)
 
 But you can choose any thunderbird inbox viewer available in the internet. I tried a random one and i got a better exeperience to understand what happen. 
 
-![](2023-03-03-00-07-51.png)
+![](./images/2023-03-03-00-07-51.png)
 
 Let's summerize what we found. One mail telling that the kubernetes cluster is updgraded successfully from the platform engineer, another one from a system adminstration telling the Technical Director about the security updates. Another one from `Securinets INSAT` asking for sponsorship to the National Cyber Security Congress! And the suspicision one is from a dummy mail `4n6nk8s@gmail.com`. In this mail we found a clue! 
 A stranger tell the Technical Director about deploying a malicious binary and send a mega link! Ahhh Protected one
 
-![](2023-03-03-00-12-29.png)
+![](./images/2023-03-03-00-12-29.png)
 
 The link lead you to a wordlist that have strong and secure passwords. The mail talks about subsystem!! What a subsystem? Is it a `WSL` ??
 
 
-![](2023-03-03-00-15-19.png)
+![](./images/2023-03-03-00-15-19.png)
 
 and here we finished mail browser history and mail investigation. still the whatsapp thing! Where is whatsapp hide his data?? good question. Checking AppData don't help us. We didn't find any WhatsApp directory! 
 
 After googling we found that there is some whatsapp version can store his data inside `%AppData%\Local\Packages`. Let's check that folder and Bingoo!! We found whatsapp directory! WhatsApp was installed here! Let's see what we can do here! 
 
-![](2023-03-03-00-21-09.png)
+![](./images/2023-03-03-00-21-09.png)
 
 You can find some conversation inside `messages.db` file. It might be encrypted and it might be decrypted. Let's try to open this database and see what we can find here!
 
-![](2023-03-03-12-51-39.png)
+![](./images/2023-03-03-12-51-39.png)
 
 I am chocked!! Two employees were behind all this!!
 Two employees hate the director and they want to be in a trouble!
 
 The attackers talks about encryption and subsystem password and they are shocked because the system is windows! and yes the mega decryption key is shared in this discussion. They send the mail to the director to make it in trouble!! 
 
-![](2023-03-03-00-42-06.png)
+![](./images/2023-03-03-00-42-06.png)
 
 Let's download that wordlist and check the powershell history commands! I am sure there is something there. Because I found Hyber-V directory in random place while investigating. The history is stored in `%userprofile%\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history. txt`
 
-![](2023-03-03-00-46-46.png)
+![](./images/2023-03-03-00-46-46.png)
 
 Yeah! Everything is cleared now! subsytem, subsystem! They are talking about WSL. WSL is installed here! and it used to host the malicious program! But what they does mean by encryption and the password. Mmmmm I guess we will face some cracking in the few next minutes! 
 
 Let's check WSL now! Where is windows store the WSL? Just check `%userprofile%\AppData\Local\Packages` 
 
-![](2023-03-03-01-03-38.png)
+![](./images/2023-03-03-01-03-38.png)
 
 Let's mount this vhdx disk now in our Linux/WSL and check the files in this system. You can use `libguestfs-tools` to achieve this.
 
@@ -89,14 +89,14 @@ Let's mount this vhdx disk now in our Linux/WSL and check the files in this syst
 raf@4n6nk8s:~$ sudo apt-get install libguestfs-tools
 ```
 Then, you can mount now the wsl disk image:
-![](2023-03-03-01-12-07.png)
+![](./images/2023-03-03-01-12-07.png)
 
 We found a user named `Kong` and have a home directory. Let's check his files and bash history! 
 
-![](2023-03-03-01-13-45.png)
+![](./images/2023-03-03-01-13-45.png)
 
 Let's start with `.bash_history` first. It's my number one rule! 
-![](2023-03-03-01-19-22.png)
+![](./images/2023-03-03-01-19-22.png)
 
 Wow! The attacker configure wsl.conf then install docker! Mmm He configure it to be boot with systemd!
 Then he installed something called kind, After that he download `kubectl`! Kubectl??? Ah It's `Kubernetes` time!
@@ -247,7 +247,7 @@ resources:
 
 Let's talk a little about the `Encryption Configuration` in Kubernetes. 
 
-![](https://d33wubrfki0l68.cloudfront.net/2475489eaf20163ec0f54ddc1d92aa8d4c87c96b/e7c81/images/docs/components-of-kubernetes.svg)
+![](./images/https://d33wubrfki0l68.cloudfront.net/2475489eaf20163ec0f54ddc1d92aa8d4c87c96b/e7c81/images/docs/components-of-kubernetes.svg)
 
 As known. Etcd is a distributed key-value store that is used by Kubernetes to store and retrieve the configuration data for the cluster. The Kubernetes API server interacts with etcd to read and write configuration data, such as the current state of the cluster and the desired state. The etcd data store serves as the single source of truth for the Kubernetes cluster's configuration data, and the API server ensures that this data is always up to date and consistent across the cluster.
 
@@ -255,7 +255,7 @@ The API server accepts an argument `--encryption-provider-config` that controls 
 
 So our mission now is to find the secret value of the `EncryptionConfiguration` to use it after restoring the etcd by setting up a new api server that can read the encrypted data from the `etcd`.
 
-![](2023-03-03-12-53-49.png)
+![](./images/2023-03-03-12-53-49.png)
 
 Getting back to the whatsapp discussion. The attacker use the same password for the encryption key and subsystem password!
 
@@ -263,7 +263,7 @@ Bingo!! Crack time! We know that the encryption key must be 32 bytes. So this in
 
 Linux stores user passwords hashes in `/etc/shadow`. Great, we have the hash and the wordlist! Let's do it!
 
-![](2023-03-03-03-01-25.png)
+![](./images/2023-03-03-03-01-25.png)
 
 Let's start filter out the passwords with 32 characters from the wordlist using grep and tail to pick from the bottom:
 ```bash
@@ -286,7 +286,7 @@ john --wordlist=pass.txt crack-me.txt --format=crypt
 ```
 After some minutes we got the password!! The password is : `@a*Hd~u32@q1Db/LUiOFxC*W2THm5p*V`
 
-![](2023-03-03-15-07-00.png)
+![](./images/2023-03-03-15-07-00.png)
 
 Now it's time to resotre the `etcd`. Restoring a Kubernetes cluster in case of a disaster can be accomplished using etcd snapshots. However, the process of restoring an etcd snapshot is not straightforward and requires expertise. Actually in kubernetes etcd can take snapshot automatically. So we will count on that.
 
@@ -370,7 +370,7 @@ After changing the manifest the api-server will be stopped and down. If you did 
 
 After configuring the api-server correctly let's take the content `/var/lib/netcd` and try to use the `db` as our snapshot that we want to restore it! 
 
-![](2023-03-03-15-58-38.png)
+![](./images/2023-03-03-15-58-38.png)
 
 I suggest to copy `db` inside the control-plane node (in this case container). I will copy it to one of the extraMounts of kind. 
 
