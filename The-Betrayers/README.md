@@ -64,7 +64,7 @@ After googling we found that there is some whatsapp version can store his data i
 
 You can find some conversation inside `messages.db` file. It might be encrypted and it might be decrypted. Let's try to open this database and see what we can find here!
 
-![](2023-03-03-00-34-09.png)
+![](2023-03-03-12-51-39.png)
 
 I am chocked!! Two employees were behind all this!!
 Two employees hate the director and they want to be in a trouble!
@@ -213,3 +213,260 @@ This is a deployment manifest that pull a private image `medrafk8s/kubersex` usi
 Let's summerize now! The attacker installed Kind to deploy the web app that hosts the malicious inside a kubernetes cluster! 
 
 So our objective is to recover the webapp that contains the malicious binary! But how can we restore that container! It's a private container! What we should to do? 
+
+To get the private container we need to get the pull secret. The credential that allow us to pull the container image! The credential are stored inside a `secret` (Kubernetes Object).
+
+According to the bash history we have this commands:
+```bash
+USER=XXXXXXXXXXXXXXXXXXXX
+PASSWORD=XXXXXXXXXXXXXXXXXXX
+SERVER=XXXXXXXXXXXXXXXXXX
+kubectl create secret docker-registry regcred --docker-server=$SERVER --docker-username=$USER --docker-password=$PASSWORD
+kubectl get secrets
+```
+> The attacker store the credential inside environement and create a pull secret using `kubectl` command 
+
+The only way to get the credential is to extract the secret from the `etcd`. But We have a problem! The etcd is protected! 
+
+Let's Back to the bash history you'll find that the attacker edit a `kube-apiserver.yaml` and `enc.yaml`. 
+
+```yaml
+### enc.yaml ###
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+    - secrets
+    providers:
+      - identity: {}
+      - secretbox:
+          keys:
+            - name: key1
+              secret: <BASE64 ENCODED>
+```
+
+Let's talk a little about the `Encryption Configuration` in Kubernetes. 
+
+![](https://d33wubrfki0l68.cloudfront.net/2475489eaf20163ec0f54ddc1d92aa8d4c87c96b/e7c81/images/docs/components-of-kubernetes.svg)
+
+As known. Etcd is a distributed key-value store that is used by Kubernetes to store and retrieve the configuration data for the cluster. The Kubernetes API server interacts with etcd to read and write configuration data, such as the current state of the cluster and the desired state. The etcd data store serves as the single source of truth for the Kubernetes cluster's configuration data, and the API server ensures that this data is always up to date and consistent across the cluster.
+
+The API server accepts an argument `--encryption-provider-config` that controls how API data is encrypted in etcd. In other words, API server can store the data inside etcd but not in plain text! It's encrypted to secure the data inside the database! for more details check this [link](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+
+So our mission now is to find the secret value of the `EncryptionConfiguration` to use it after restoring the etcd by setting up a new api server that can read the encrypted data from the `etcd`.
+
+![](2023-03-03-12-53-49.png)
+
+Getting back to the whatsapp discussion. The attacker use the same password for the encryption key and subsystem password!
+
+Bingo!! Crack time! We know that the encryption key must be 32 bytes. So this information will help us filtering the downloaded wordlist! 
+
+Linux stores user passwords hashes in `/etc/shadow`. Great, we have the hash and the wordlist! Let's do it!
+
+![](2023-03-03-03-01-25.png)
+
+Let's start filter out the passwords with 32 characters from the wordlist using grep and tail to pick from the bottom:
+```bash
+grep -E '^.{32}$' passwords.txt | tail -n 100000 > pass.txt
+```
+Now it's time to extract the user information from `/etc/shadow` and `/etc/password`
+```bash
+grep kong etc/passwd > passwd.txt
+grep kong etc/shadow > shadow.txt
+```
+Before start cracking using `John The Ripper`. We need to combine the passwd and shadow into a format that john can read. `unshadow` can do this work!
+
+```bash
+unshadow passwd.txt shadow.txt > crack-me.txt
+```
+Now our hash is ready for crack. Let's use john with `--format=crypt` to specify that we are trying to crack yescrypt hash
+
+```bash
+john --wordlist=pass.txt crack-me.txt --format=crypt
+```
+After some minutes we got the password!! The password is : `@a*Hd~u32@q1Db/LUiOFxC*W2THm5p*V`
+
+![](2023-03-03-15-07-00.png)
+
+Now it's time to resotre the `etcd`. Restoring a Kubernetes cluster in case of a disaster can be accomplished using etcd snapshots. However, the process of restoring an etcd snapshot is not straightforward and requires expertise. Actually in kubernetes etcd can take snapshot automatically. So we will count on that.
+
+In this case i will use Kind to generate a lightweight cluster. In case you will use your own cluster you must to know that restoring etcd can lead you to lost your cluster data. So be careful!
+
+To keep it simple I'll use the same configuration as `k-config.yaml`. 
+
+```bash
+kind create cluster --config=k-config.yaml
+Creating cluster "kind" ...
+ ✓ Ensuring node image (kindest/node:v1.25.3) 🖼
+...
+...
+
+kubectl cluster-info --context kind-kind
+
+Have a nice day! 👋
+```
+In Kind each node will be represented as a container
+
+```bash
+raf@4n6nk8s:~$ docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS
+  NAMES
+eba4afe51855   kindest/node:v1.25.3   "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   127.0.0.1:43323->6443/tcp   kind-control-plane
+13d7b697ba1f   kindest/node:v1.25.3   "/usr/local/bin/entr…"   2 minutes ago   Up 2 minutes   0.0.0.0:80->30999/tcp       kind-worker
+```
+After making sure that the api-server works correctly we need to add the `Encryption Configuration` to make sure that the api server can read the encrypted data after restoring etcd. 
+
+Go and put this file on `/etc/kubernetes/enc/enc.yaml`
+
+```yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+    - secrets
+    providers:
+      - identity: {}
+      - secretbox:
+          keys:
+            - name: key1
+              secret: QGEqSGR+dTMyQHExRGIvTFVpT0Z4QypXMlRIbTVwKlY=
+```
+Then go to `/etc/kubernetes/manifests/api-server.yaml` to add these lines.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 172.18.0.2:6443
+  creationTimestamp: null
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    ...
+    - --encryption-provider-config=/etc/kubernetes/enc/enc.yaml  # <-- add this line
+    volumeMounts:
+    ...
+    - name: enc                           # <-- add this line
+      mountPath: /etc/kubernetes/enc      # <-- add this line
+      readonly: true                      # <-- add this line
+    ...
+  volumes:
+  ...
+  - name: enc                             # <-- add this line
+    hostPath:                             # <-- add this line
+      path: /etc/kubernetes/enc           # <-- add this line
+      type: DirectoryOrCreate             # <-- add this line
+  ...
+```
+After changing the manifest the api-server will be stopped and down. If you did it corretly, you need to wait a few seconds until the api-server works again! 
+
+
+After configuring the api-server correctly let's take the content `/var/lib/netcd` and try to use the `db` as our snapshot that we want to restore it! 
+
+![](2023-03-03-15-58-38.png)
+
+I suggest to copy `db` inside the control-plane node (in this case container). I will copy it to one of the extraMounts of kind. 
+
+Now let's open a shell inside the control-plane container:
+
+```bash
+docker exec -it kind-control-plane bash
+```
+Now we need to use an utility called etcdctl that will help us to interact with the etcd server. 
+```bash
+apt update 
+apt install etcd-client
+```
+After install it succesfully. An important thing it must be done. Don't skip this step! you must export an env variable to make etcdctl behave as we need!
+```bash
+export ETCDTL_API=3
+```
+now it's time to use this utility! There is a resotre command in this utility that allow us to restore the backup or the snapshot
+```bash
+
+etcdctl --endpoints=https://[etcd-server] \
+--cacert=<path-to-ca-certification> \
+--cert=<path-to-etcd-server-cert> \
+--key=<path-to-etcd-server-key> \
+--data-dir <path-to-restored-data> \ 
+snapshot restore <path-to-snapshot>
+```
+You need to fill this arguments with your own. you can get theses information from `/etc/kubernetes/manifests/etcd.yaml`
+
+In my case the command it will be like this:
+
+```bash
+ETCDTL_API=3 etcdctl --endpoints=https://[127.0.0.1:2379] \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+--data-dir /var/lib/etcd-backup \
+snapshot restore ./db
+```
+
+You migth get an error or warning about hash stuff after running this command. Skip it! Let's check if `/var/lib/etcd-backup` directory is created and if it contains `member` directory!
+
+If you got it! Then you are on the right way! Now it's time to do the crazy thing! Let's replace our new data placed in `/var/lib/etcd-backup/member/snap` to the original etcd database!
+
+```bash
+cp /var/lib/etcd-backup/member/snap/db /var/lib/etcd/member/snap/
+```
+Just wait few seconds! and try a kubectl command! 
+
+```bash
+kubectl get nodes
+NAME                  STATUS     ROLES           AGE   VERSION
+kind-control-plane    NotReady   <none>          51m   v1.25.3
+kind-worker           NotReady   <none>          51m   v1.25.3
+quals-control-plane   Ready      control-plane   26h   v1.25.3
+quals-worker          Ready      <none>          26h   v1.25.3
+```
+
+Bingo! It works fine! but as you see here we have nodes naming issues cause of the data of the etcd! 
+
+Let's check if we have a secret object or not!
+
+```bash
+kubectl get secrets
+NAME      TYPE                             DATA   AGE
+regcred   kubernetes.io/dockerconfigjson   1      26h
+```
+And Yes!!! We got our secret! Let's now inspect the data inside it!
+
+```bash
+ kubectl get secret regcred -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d
+{"auths":{"docker.io":{"username":"medrafk8s","password":"dckr_pat_MLkRjYtjdk7dwT80W_dx3VTuac8","auth":"bWVkcmFmazhzOmRja3JfcGF0X01Ma1JqWXRqZGs3ZHdUODBXX2R4M1ZUdWFjOA=="}}}
+```
+
+And finally! The registry is `docker.io`, the username is `medrafk8s` and the password is `dckr_pat_MLkRjYtjdk7dwT80W_dx3VTuac8`
+
+With this creds we can pull the container that host the malicious binary and analyse his traffic! Let's do it!
+
+```bash
+raf@4n6nk8s:~$ docker login docker.io -u medrafk8s -p dckr_pat_MLkRjYtjdk7dwT80W_dx3VTuac8
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+Login Succeeded
+```
+Let's pull this image now! 
+
+```bash
+raf@4n6nk8s:~$ docker pull medrafk8s/kubersex
+Using default tag: latest
+latest: Pulling from medrafk8s/kubersex
+c158987b0551: Pull complete
+1e35f6679fab: Pull complete
+cb9626c74200: Pull complete
+b6334b6ace34: Pull complete
+f1d1c9928c82: Pull complete
+9b6f639ec6ea: Pull complete
+ee68d3549ec8: Downloading [=======>                                           ]  1.813MB/11.49MB
+4caa31e6cbc5: Download complete
+a1434f597582: Waiting
+```
