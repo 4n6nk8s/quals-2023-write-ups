@@ -56,6 +56,137 @@ image.save(args.output)
 ```
 > In this Step. I am thinking to give a binary instead of this small python script. I am thinking to re-write this script in go/rust and give the binary to make the 1st step more hard.
 
+```go
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"os"
+	"flag"
+)
+
+func main() {
+
+	// Create a new FlagSet to parse command line arguments
+	flagSet := flag.NewFlagSet("steganography", flag.ExitOnError)
+
+	// Define command line options and arguments
+	inputFileName := flagSet.String("i", "", "select cover-image")
+	embedFileName := flagSet.String("e", "", "select image to be embedded")
+	outputFileName := flagSet.String("o", "", "The output")
+
+	// Parse the command line arguments
+	flagSet.Parse(os.Args[1:])
+
+	// Check if the options and arguments are correct
+	if *inputFileName == "" || *embedFileName == "" || *outputFileName == "" {
+		flagSet.Usage()
+		os.Exit(1)
+	}
+
+
+
+	// Open the input file
+	inputFile1, err := os.Open(*embedFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer inputFile1.Close()
+
+	// Decode the PNG image
+	inputImage1, _, err := image.Decode(inputFile1)
+	if err != nil {
+		panic(err)
+	}
+
+	// Check if the image is grayscale
+	grayImage, ok := inputImage1.(*image.Gray)
+	if !ok {
+		fmt.Println("Error: input image is not grayscale")
+		return
+	}
+
+	// Get the width and height of the image
+	embed_width := grayImage.Bounds().Size().X
+	embed_height := grayImage.Bounds().Size().Y
+
+	// Open the input file
+	inputFile, err := os.Open(*inputFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer inputFile.Close()
+
+	// Decode the image as a generic Image interface value
+	inputImage, _, err := image.Decode(inputFile)
+	if err != nil {
+		panic(err)
+	}
+
+	// Assert the image to an *image.RGBA or *image.NRGBA value
+	rgba, ok := inputImage.(*image.RGBA)
+	if !ok {
+		nrgba, ok := inputImage.(*image.NRGBA)
+		if !ok {
+			panic("Input image format not supported")
+		}
+		rgba = image.NewRGBA(nrgba.Bounds())
+	}
+
+	// Get the width and height of the image
+	bounds := rgba.Bounds()
+	width := bounds.Size().X
+	height := bounds.Size().Y
+	index:=0
+
+	if width!=embed_width || height!=embed_height {
+		panic("The Images are not in the same size!")
+
+	}
+	// Invert the colors of the image by subtracting each RGB component from 255
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			intensity := grayImage.GrayAt(x, y).Y & 1
+			i:=uint8(index%2)
+			data:= ((intensity << i) | (254-i))
+			r, g, b, a := rgba.At(x, y).RGBA()
+			im_pix:= [3]uint8{uint8(r),uint8(g),uint8(b)}
+			j:= uint(index%3)
+			if intensity == 1 {
+				im_pix[j] = im_pix[j] | (data & (1+i))
+			} else {
+				im_pix[j] = im_pix[j] & data
+			}
+			newColor := color.RGBA{
+				R: uint8(im_pix[0]),
+				G: uint8(im_pix[1]),
+				B: uint8(im_pix[2]),
+				A: uint8(a),
+			}
+			rgba.SetRGBA(x, y, newColor)
+			index++
+		}
+
+	}
+
+	// Create the output file
+	outputFile, err := os.Create(*outputFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer outputFile.Close()
+
+	// Encode the output image as PNG
+	if err := png.Encode(outputFile, rgba); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Output image saved successfully")
+}
+```
 
 As we see here this script try to hide image inside another image in a specific way. We need to understand how he hide data. 
 
