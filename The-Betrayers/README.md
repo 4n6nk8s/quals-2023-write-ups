@@ -4,13 +4,15 @@
 
 An IT company provides a critical service to customers. One day, the service is attacked by DDoS. The Attack is originated from within the company's internal network, and that each compromised host was sending a large number of requests to the server.
 
-The attack occurred shortly after the company installed a new patch to one of its core software programs. The new version is hosted by the Technical Director server!  
+The attack occurred shortly after the company installed a new patch to one of its software programs. Every new version should be hosted by a special web server with DNS record in the private network but this time the new version is hosted by the Technical Director server!!!
 
-The host must be a specific web server not his server!!! The Technical Director is in trouble and he said that is not the attacker!
+The Technical Director is in trouble and he said that is not the attacker!
 
 The strange thing is that the program is deleted directly after the blue team figure out the attack!
 
 We need to get a release from that version and figure out how the attack occur!
+
+> The binary expect to do DDoS attack on specifc IP. In this challenge we changed the IP and the rate of send requests
 
 ### Write-up 
 
