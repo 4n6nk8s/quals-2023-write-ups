@@ -1,7 +1,7 @@
 # Write up for Cima-steg
 
 ### Description:
-> My friend write a tool that can hide data. He give me this tool with an anime video. Can you help me extract the flag? 
+> My friend write a tool that can hide data inside an image. He give me this tool with an anime video without any source code and challenge me to get the secret! . Can you help me extract the flag? 
 Flag format: Securinets{Secrect}
 
 Let's take a look at the script:
