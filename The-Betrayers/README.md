@@ -470,3 +470,85 @@ ee68d3549ec8: Downloading [=======>                                           ] 
 4caa31e6cbc5: Download complete
 a1434f597582: Waiting
 ```
+
+The 1st i used to do when I pull a container image in forensics challenges is to check the layers of the image! 
+
+```bash
+raf@4n6nk8s:~$ docker history medrafk8s/kubersex
+IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+77a3b3f4c35c   13 minutes ago   /bin/sh -c #(nop)  CMD ["nginx" "-g" "daemon…   0B
+0b383b70426b   13 minutes ago   /bin/sh -c rm Serial-Key.txt                    0B
+b6ca15406c7d   13 minutes ago   /bin/sh -c #(nop)  EXPOSE 80                    0B
+64eaf6945cd1   13 minutes ago   /bin/sh -c #(nop) COPY file:ed75fc1a725ff91b…   20B
+748d1b219207   13 minutes ago   /bin/sh -c #(nop) COPY dir:48e5409ee398a470a…   5.4MB
+4937520ae206   6 weeks ago      /bin/sh -c set -x     && apkArch="$(cat /etc…   29.6MB
+<missing>      6 weeks ago      /bin/sh -c #(nop)  ENV NJS_VERSION=0.7.12       0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  CMD ["nginx" "-g" "daemon…   0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  STOPSIGNAL SIGQUIT           0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  EXPOSE 80                    0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  ENTRYPOINT ["/docker-entr…   0B
+<missing>      6 weeks ago      /bin/sh -c #(nop) COPY file:e57eef017a414ca7…   4.62kB
+<missing>      6 weeks ago      /bin/sh -c #(nop) COPY file:36429cfeeb299f99…   3.01kB
+<missing>      6 weeks ago      /bin/sh -c #(nop) COPY file:d4375883ed5db364…   276B
+<missing>      6 weeks ago      /bin/sh -c #(nop) COPY file:5c18272734349488…   2.12kB
+<missing>      6 weeks ago      /bin/sh -c #(nop) COPY file:7b307b62e82255f0…   1.62kB
+<missing>      6 weeks ago      /bin/sh -c set -x     && addgroup -g 101 -S …   4.74MB
+<missing>      6 weeks ago      /bin/sh -c #(nop)  ENV PKG_RELEASE=1            0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  ENV NGINX_VERSION=1.25.1     0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  LABEL maintainer=NGINX Do…   0B
+<missing>      6 weeks ago      /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+<missing>      6 weeks ago      /bin/sh -c #(nop) ADD file:828b07e74c184e7f2…   7.05MB
+```
+
+This is a webserver! Something important is here. No one can ignore the `Serial-Key.txt` file
+We will get it later! Let's run the web app now 
+```bash
+raf@4n6nk8s:~$ sudo docker run --name kubersex -p 81:80 medrafk8s/kubersex
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2023/08/02 17:37:52 [notice] 1#1: using the "epoll" event method
+2023/08/02 17:37:52 [notice] 1#1: nginx/1.25.1
+2023/08/02 17:37:52 [notice] 1#1: built by gcc 12.2.1 20220924 (Alpine 12.2.1_git20220924-r4)
+```
+Mmm there is a Download button! Press it and you will get a binary! Bingo! This is the malicious release! 
+
+
+![The web app](./images/image.png)
+
+After checking the binary and run it, we found that the binary requires a serial key! Let's recover that file! 
+
+```bash
+raf@4n6nk8s:~$ docker save medrafk8s/medraf > image.tar 
+raf@4n6nk8s:~$ tar -xf image.tar 
+raf@4n6nk8s:~$ cd aae4861ba6bde0fbe820ba547bbe794c7c7e9c8be14c8972a6691eaa584161bc
+raf@4n6nk8s:~$ tar -xf layer.tar && ls
+Serial-Key.txt  VERSION  json  layer.tar
+```
+
+And this is the content of the file ! 
+
+```
+I will put the serial key in the container image in case you forget! YOU FOOOOL YOU USED TO FORGET IT! GO AND DESTROY THE SERVICE WITH THE BOSS HOST!
+
+KEY:
+KFTV-RCFL-VC5W-HX3X
+```
+Run the binary again and insert that key! It seems the binary works! I bet this is the responsible binary for the DDoS attack! So, I will check the behavior of this binary and open Wireshark while this one is running!
+
+
+![Record Traffic with Wireshark](./images/image-1.png)
+
+Mmmm this is http flow! Let's check the requests! 
+
+![We got the flag!](./images/image-2.png)
+
+Binggo we got the flag! The flag is on the http header
+
+FLAG: `Securinets{c03cefb79791e431011d0f86de9dd83aee67aebcec946bfefad00cd4807fc9c3}`
