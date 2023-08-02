@@ -240,7 +240,7 @@ raf@Securinets:~$ mkdir data
 We will put our solver inside a function and use a for loop to run it on each frame 
 ```python
 
-def extract(frame,extracted)
+def extract(frame,output):
     image=Image.open(frame)
     image_data = image.load()
     extracted = Image.new('1', (image.width,image.height), 1)
@@ -254,7 +254,7 @@ def extract(frame,extracted)
                 flag_pix=255
             output_data[i,j]=flag_pix
             index+=1
-    extracted.save(extracted)
+    extracted.save(output)
 
 for i in range(383):
     index="0"*(3-len(str(i+1)))+str(i+1)+".png"
@@ -367,7 +367,7 @@ for n in range(1,360):
             if image_pixs[i,j]!=255:
                 imgpixs[i,j]=image_pixs[i,j]
 
-img.save("Recoverd.png")
+img.save("Recovered.png")
 ```
 In this script we collect all the black pixels and ignore the white pixels. Because we generate a white image and we will fill it with the black color. Let's recover the image now!!
 
@@ -410,7 +410,7 @@ W_SPLIT=6
 H_SPLIT=6
 
 ASSEMBLED_IMAGE="Assembled.png"
-
+SPLITTED_IMAGE="Recovered.png"
 image= Image.open(SPLITTED_IMAGE)
 width, height = image.size
 pixels = image.load()
@@ -431,7 +431,7 @@ def change_chunk(index1,index2):
             pixels[pos2[0]*width_chunk+i,pos2[1]*height_chunk+j]= aux
 
 data=open("help.txt","r").read().split("\n")
-for i in range(len(data)):
+for i in range(len(data)-1):
     position=data[i].split("<-->")
     print(position)
     change_chunk(int(position[0]),int(position[1]))
@@ -479,7 +479,7 @@ qr=qrtools.QR()
 def missed_data():
     not_missed=[]
     data=open("help.txt","r").read().split("\n")
-    for i in range(len(data)):
+    for i in range(len(data)-1):
         position=data[i].split("<-->")
         not_missed.append(int(position[0]))
         not_missed.append(int(position[1]))
