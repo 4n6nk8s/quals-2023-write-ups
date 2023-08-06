@@ -542,6 +542,11 @@ I will put the serial key in the container image in case you forget! YOU FOOOOL 
 KEY:
 KFTV-RCFL-VC5W-HX3X
 ```
+
+> At this point you can reverse the binary and get the flag! or patch the binary to change a IP server with your choice! In this step reversing is the main idea so i put a public IP of a reachable server to make the binary send packets when players decice to run it !
+
+Let's continue: 
+
 Run the binary again and insert that key! It seems the binary works! I bet this is the responsible binary for the DDoS attack! So, I will check the behavior of this binary and open Wireshark while this one is running!
 
 
