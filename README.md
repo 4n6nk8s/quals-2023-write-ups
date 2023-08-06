@@ -11,4 +11,4 @@ Write-ups for forensics and misc challenges of quals 2023
 
 [1-The Betrayers](./The-Betrayers/README.md)
 
-[2-Jackpot](./The_Setup/README.md)
+[2-Jackpot](./Jackpot/README.md)

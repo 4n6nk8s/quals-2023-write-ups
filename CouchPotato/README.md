@@ -1,24 +1,5 @@
----
-title: "SecuriNets Quals CTF 2023 Submission"
-author: ["adm, @adlahbib"]
-date: "Proprietary + Confidential / Feb 10th"
-subject: "CTF Challenge"
-keywords: [CTF, Forensics, Memory Dump, Misc]
-subtitle: "Fits under Misc, Codenamed Couch Potato"
-lang: "en"
-titlepage: true
-titlepage-color: "DC143C"
-titlepage-text-color: "FFFFFF"
-titlepage-rule-color: "FFFFFF"
-titlepage-rule-height: 2
-book: true
-classoption: oneside
-code-block-font-size: \scriptsize
----
 
-# Introduction
-
-This is a writeup for the Securinets Quals CTF 2023 possible challenge, which fits under the Misc category with a touch of OSINT. The challenge could be named Couch Potato by adm.
+![](https://i.imgur.com/jHut52F.png)
 
 ## Description
 
@@ -27,20 +8,20 @@ It's past one, I was probably sleeping in front of my screen, I'm not even sure 
 I am looking for three stuff:
 
 - _What nonsense was I watching the night the device failed me?_
-- _I might need the Up and Down key codes?_
+- _I might need the Up and Down key codes in NEC 32-bit format?_
 - _The expiration date of my IPTV subscription._
 
-The flag should be: **Securinets{show_name_upkeycode_downkeycode_YYYYMMDD}**
-Thanks!
+Flag formal: **Securinets{show_name_00UP1234_DOWN1234_YYYYMMDD}**
 
-Score: 500 points I guess.
-Solves: TBA.
+[adm & mida0ui](https://twitter.com/admida0ui)
 
 ## Attachment
 
 A file called `dump.bin` was provided in a zip. Weighing 8 MB. Dating back to February the 1st, 2020. 1:07 AM.
 
 Another file is what seems to be an updated firmware for the device, `Firmware.bin` weighing 4 MB. And dating back to August the 25th, 2020.
+
+[Download Link](https://drive.google.com/drive/folders/1TGNAOWKZZbCzZuVImklA18IH_cUvtkNy?usp=sharing)
 
 # Analysis
 
@@ -52,8 +33,6 @@ The user also mentioned that the device failed him, which means that the device 
 On other hand, the user is suspecting that the IPTV subscription was the thing behind the interruption of his channel. This means that the IPTV subscription was a service provided by the device itself or maybe a third party service. This also means that the STB we're dealing with is a hybrid device, meaning that it can receive satellite signals and also IPTV, making it a 2nd generation STB and there are plenty in the market today, for third world countries.
 
 However, the user could be mistaken as the channels that you can shortlist in the favorites are more likely to be satellite channels, hence the IPTV subscription is not the reason behind the interruption of his favorite channel rather than the satellite signal itself or the cardsharing service he is using.
-
-Note for the readers: I can switch the last part of the flag to cardsharing expiration date instead of IPTV subscription expiration date.
 
 With all that in mind, we can start our information gathering phase.
 
@@ -103,7 +82,7 @@ First, let's investigate the dump file.
 - ALI3618
 - ALI3821
 
-![](2023-02-10-17-57-07.png)
+![](https://i.imgur.com/vSB9IGX.png)
 
 Devices with those chipset have these brands _Starsat, Sunplus, Tiger, StarMax, Geant, Mediastar, QMAX, AzAmerica, Samsat and many more..._
 
@@ -119,15 +98,15 @@ Time to google for a way to decrypt such chipset firmware. Let's use the keyword
 
 For example:
 
-![](2023-02-10-18-41-37.png)
+![](https://i.imgur.com/DfscXB4.png)
 
 And in Arabic:
 
-![](2023-02-10-18-43-24.png)
+![](https://i.imgur.com/rdG9k09.png)
 
 Using the tool, we determine that the model is SR-2000HD HYPER and the remote control is SR-2000HD HYPER. Hence the brand is Starsat.
 
-![](2023-02-10-18-45-53.png)
+![](https://i.imgur.com/uWfBYaJ.png)
 
 The unpack and repack features are used to decrypt and extract parts of the firmware like the bootloader, maincode, user data if any was supplied by the manufacturer, the menu, the remote, and sometimes a softcam (that's out of our scope today, maybe in another challenge!). And the repack to insert modified parts and RSA encrypt the whole thing again. Like for instance, we can insert the main menu (including themes and applications) or the remote control unit of a different model or brand and repack it to be used with the device we have, as long as they are using the very same chipset. Well this time, rest assured it is the Hyper remote control and when we talk about key code we mean the IR Infrared key code.
 
@@ -135,21 +114,21 @@ So the whole memory dump thing and the firmware kind of contain similar stuff at
 
 See here, the content of the folder when unpacked.
 
-![](2023-02-10-18-56-02.png)
+![](https://i.imgur.com/P8IBsRt.png)
 
 So why not, giving the dump a try and unpack it as well, we are chasing the user data part anyway. And the tool might very much help. Otherwise I will show how to proceed manually knowing the offsets and lengths found on a forum.
 
 ### Finding the show
 
-As I said before, we can deal with this part either using the tool or manually.
+As we said before, we can deal with this part either using the tool or manually.
 Well, the tool was able to yield this:
 
-![](2023-02-10-19-23-52.png)
+![](https://i.imgur.com/f1fon6N.png)
 
-Very nice, I can see `database.sdx` file there!
+Very nice, we can see `database.sdx` file there!
 
 Well, to proceed manullay you need to know the offsets and lengths beforehand.
-This is what I meant:
+This is what we meant:
 
 ```
 ++++++++++++++++++++++++++++++++++++++
@@ -206,33 +185,33 @@ Here's a view from hex editor first.
 
 Starts off like this
 
-![](2023-02-10-19-32-49.png)
+![](https://i.imgur.com/7FHWF6K.png)
 
 And ends padded with 0xFF
 
-![](2023-02-10-19-33-15.png)
+![](https://i.imgur.com/xqvWPxc.png)
 
 Let's google a bit...
 
-![](2023-02-10-19-36-32.png)
+![](https://i.imgur.com/P5bXWY4.png)
 
-I got this
+We got this
 
-![](2023-02-10-19-37-32.png)
+![](https://i.imgur.com/hVzUWC9.png)
 
-When trying to first open the database, I got this error message
+When trying to first open the database, we got this error message
 
-![](2023-02-10-19-38-10.png)
+![](https://i.imgur.com/ASWzJB9.png)
 
 And the issue is that the Userdata has a static size as indicated before. As the receiver's capacity fits a maximum of 6100 channels. So the database file is padded with 0xFF to reach the maximum size. Let's get rid of the padded data and try again..
 
-![](2023-02-10-19-41-19.png)
+![](https://i.imgur.com/NUIk82u.png)
 
 Now, it's working like charm, and I already see some familiar TV channels on Astra 1 (19.2 East).
 
 Let's expand the favorites section
 
-![](2023-02-10-19-42-43.png)
+![](https://i.imgur.com/AmkpQPE.png)
 
 And there is Sky Sports Main Event, UK-based sports channel that is part of BSkyB or Sky Group, pay-television channel and availble for satellite subsribers via Eurobird 1, Astra 2 (28.2 East). Sky Sports Main Event broadcasts the biggest events of sports in the UK.
 
@@ -240,11 +219,11 @@ Now, great work to reach this point, but we are not done yet. We need to find th
 
 Well, Sky TV Guide won't keep such data for more than a week or two, so we need to find another way.
 
-I guess you know what I mean, what else than the way back machine!
+Guess you know what we mean, what else than the way back machine!
 
 Head over to archive.org and submit the link for the Sky TV Guide and try to narrow your search to a date that's equal or close to the date in question, as shown below!
 
-![](2023-02-10-20-08-13.png)
+![](https://i.imgur.com/B5scqzJ.png)
 
 And that is the first part of the flag: `live_rugby_7's` or `live_rugby_7s`
 
@@ -252,23 +231,26 @@ And that is the first part of the flag: `live_rugby_7's` or `live_rugby_7s`
 
 We know it is Starsat SR-2000HD Hyper's remote control, well unless you have the same remote control or probably a remote of the same brand and an Arduino card embedded with an IR receiver, you will need to improvise! Like check online there GitHub repos that keep track of IR key codes for different remotes. Or you can use a forum like [https://www.remotecentral.com/](https://www.remotecentral.com/) to find the key codes for the remote control.
 
-However for this part, I will use an Android app like IRplus or any alternatives and pick the device in question from the list then head over to check the keys, I will provide screenshots for what I've found.
+However for this part, we will use an Android app like IRplus or any alternatives and pick the device in question from the list then head over to check the keys, we will provide screenshots for what we've found. Since it is the simplest and fastest way.
+
+This is the LIRC protcol of Starsat https://lirc.sourceforge.net/remotes/starsat/120
+
+We are looking for NEC, so we found an app for that.
 
 [net.binarymode.android.irplus](https://irplus-remote.github.io/)
 
 1. Selecting the remote control from the list:
 
-![](2023-02-10-19-21-00.png)
+![](https://i.imgur.com/3hjuMYS.png)
 
-2. Editing the remote and checking the Up arrow
+2. Exporting the remote config and checking the Channel Up arrow and Channel Down arrow
 
-![](2023-02-10-19-21-44.png)
+![](https://i.imgur.com/lsXXO6K.png)
 
-3. Checking the Down arrow
+And that is the second part of the flag: `00ff30cf_00ff8877`
 
-![](2023-02-10-19-21-52.png)
-
-And that is the second part of the flag: `0xffa25d_0xff926d`
+we can make sure that is the correct format using a website like https://www.yamaha.com/ypab/irhex_converter.asp
+converting NEC 32-bit to Pronto hex format (RAW HEX) and then to global caché to see the full sendIR command...
 
 ### Finding the expiration date
 
@@ -282,32 +264,16 @@ The serial number in most cases is a long number like consists of maybe more tha
 
 Let's grep that easily!
 
-![](2023-02-10-20-03-03.png)
+![](https://i.imgur.com/XmWhATI.png)
 
 And there it is, the serial number, let's query the IPTV validity.
 
-![](2023-02-10-20-04-05.png)
+![](https://i.imgur.com/lTGDuFS.png)
 
 And the last part of the flag is `20141105`
 
-# The Idea
-
-To do such challenge, you need to have the device first, a Serial cable RS232, a USB to RS232 converter if needed, and a loader utility. The loader is used to pull the memory as well as to pass another memory dump or even firmware to the device. The loader itself allows you to select what parts to dump, like just the userdata or the whole memory.
-
-![](2023-02-10-19-59-42.png)
-
 # Final Words
 
-First here is the flag: **Securinets{live_rugby_7s_0xffa25d_0xff926d_20141105}**
+Flag: **Securinets{live_rugby_7s_00ff30cf_00ff8877_20141105}**
 
-This is a proposed draft Misc challenge for the Securinets Quals CTF 2023. I must disclouse that I take no responsibility in loading/flashing this whole dump to a similar device to the one in the challenge as it was customized to fit my needs. I also don't publicly support TV shows piracy, cardsharing and IPTVs. I am open to any feedback and suggestions that could help improve this challenge. I hope you enjoyed reading this writeup. Feel free to let me know if you have any questions or comments.
-
-Please keep in mind that this is a draft and that the challenge is not yet released. I will update this writeup if any changes are made to the challenge. Furthermore, it is a proprietary and confidential challenge, so please do not share it with anyone. Thank you for your understanding.
-
-## Acknowledgements
-
-Ahmed T., Rachad A., and Ayoub B.: Highly skilled custom firmware developers and porting specialists. Tunisia-sat forum member.
-
-Nacef: My cousin, for introducing me to such stuff at an early age.
-
-Thanks for reading!
+GGs **th3_r0n1ns** for solving this challenge
