@@ -1,10 +1,12 @@
-# Write up for Cima-steg
+# Write up for Raf-Hide
 
 ### Description:
 > My friend write a tool that can hide data inside an image. He give me this tool with an anime video without any source code and challenge me to get the secret! . Can you help me extract the flag? 
 Flag format: Securinets{Secrect}
 
-Let's take a look at the script:
+> In this Challenge you will get a go binary and a video! I will not explain how to reverse the binary. The main Idea is to understand what the binary do and extract the data from the video
+
+This is a python version of what the binary can do : 
 
 ```python
 from PIL import Image
@@ -54,8 +56,9 @@ for j in range(image.height):
         index+=1
 image.save(args.output)
 ```
-> In this Step. I am thinking to give a binary instead of this small python script. I am thinking to re-write this script in go/rust and give the binary to make the 1st step more hard.
 
+This is a golang version of what the binary can do :
+ 
 ```go
 package main
 
