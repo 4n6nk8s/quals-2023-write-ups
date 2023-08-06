@@ -3,7 +3,7 @@ Write-ups for forensics and misc challenges of quals 2023
 
 ## MISC
 
-[1-Raf-Hide](./CIMSTEG/readme.md)
+[1-Raf-Hide](./Raf-Hide/readme.md)
 
 [2-COUCH-POTATO](./CouchPotato/README.md)
 
